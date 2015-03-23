@@ -45,13 +45,16 @@ void transThermal<dim>::defaultSetup(){
 		height.push_back(currentLayerCell->center()[dim-1]);
 	}
 
-	layerIterator =  new typename hp::DoFHandler<dim>::active_cell_iterator[nZ];
+	int layerIndex = 0;
+	layerIterator =  new std::set<cellsIterator> [nZ];
 	// Setting the initial fe index of cells
 	for (typename hp::DoFHandler<dim>::active_cell_iterator
 	       cell = dof_handler.begin_active();
 	       cell != dof_handler.end(); ++cell){
 		cell->set_active_fe_index (0); // assigning zero FE for all the cells
-		*(layerIterator + std::lower_bound(height.begin(),height.end(),cell->center()[dim-1])).insert(cell);
+		auto layer = std::lower_bound(height.begin(),height.end(),cell->center()[dim-1]);
+		layerIndex = (int)(layer - height.begin());
+		layerIterator[layerIndex].insert(cell);
 	}
 }
 
@@ -59,8 +62,7 @@ template <int dim>
 void transThermal<dim>::update_active_fe_indices(){
 	int i = 0;
 	// Updating the active cell fe indexes
-	for (typename hp::DoFHandler<dim>::active_cell_iterator
-		       cell = layerIterator[0].begin_active();
+	for (auto cell = layerIterator[0].begin();
 		       cell != layerIterator[0].end(); ++cell){
 		i++;
 	}
@@ -69,7 +71,7 @@ void transThermal<dim>::update_active_fe_indices(){
 
 template <int dim>
 void transThermal<dim>::setup_system(){
-	dof_handler.distribute_dofs(fe_collection);
+/*	dof_handler.distribute_dofs(fe_collection);
 	CompressedSparsityPattern compressed_sparsity_pattern(dof_handler.n_dofs(), dof_handler.n_dofs());
 	DoFTools::make_sparsity_pattern (dof_handler, compressed_sparsity_pattern);
 	sparsity_pattern.copy_from (compressed_sparsity_pattern);
@@ -78,7 +80,7 @@ void transThermal<dim>::setup_system(){
 	solution.reinit (dof_handler.n_dofs());
 	system_rhs.reinit (dof_handler.n_dofs());
 	std::ofstream out ("sparsity_pattern.1");
-	sparsity_pattern.print_gnuplot(out);
+	sparsity_pattern.print_gnuplot(out);*/
 }
 
 template <int dim>
