@@ -8,34 +8,39 @@
 #ifndef THERMALSIMULATION_HPP_
 #define THERMALSIMULATION_HPP_
 
+// classes handling the meshes and enumeration of DOF's
 #include <deal.II/grid/tria.h>
+#include <deal.II/dofs/dof_handler.h>
+// accessing the cells information
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
+
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_tools.h>
 #include <deal.II/grid/tria_boundary_lib.h>
 #include <deal.II/grid/grid_out.h>
 #include <deal.II/grid/grid_in.h>
-
-#include <deal.II/dofs/dof_handler.h>
+// classes for the finite element type creation
 #include <deal.II/fe/fe_q.h>
-#include <deal.II/dofs/dof_tools.h>
-
 #include <deal.II/fe/fe_nothing.h>
-
+// creates the sparsitypattern for the sparse matrices
+#include <deal.II/dofs/dof_tools.h>
+// for assembling the linear system
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/base/quadrature_lib.h>
+// for the treatment of the boundary values
 #include <deal.II/base/function.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
+// for the linear algebra operations
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/compressed_sparsity_pattern.h>
 #include <deal.II/lac/solver_cg.h>
 #include <deal.II/lac/precondition.h>
-#include <deal.II/numerics/data_out.h>
 
+#include <deal.II/numerics/data_out.h>
 #include <iostream>
 #include <fstream>
 
@@ -47,7 +52,6 @@ private:
 	enum{
 		zeroFE_id,
 		activeFE_id
-
 	};
 	Triangulation<dim> &triangulation;
 	hp::DoFHandler<dim> dof_handler; // to enumerate the DOF's in a mesh
@@ -57,8 +61,11 @@ private:
 	FE_Q<dim> activeFE;
 	FE_Nothing<dim> zeroFE;
 	SparsityPattern      sparsity_pattern;
+	SparseMatrix<double> mass_matrix;
+	SparseMatrix<double> laplace_matrix;
 	SparseMatrix<double> system_matrix;
 	Vector<double>       solution;
+	Vector<double>       old_solution;
 	Vector<double>       system_rhs;
 	int nZ = 0; // no. of layers in Z-direction
 
@@ -68,7 +75,7 @@ private:
 	typename hp::DoFHandler<dim>::active_cell_iterator currentLayerCell;
 	typedef typename hp::DoFHandler<dim>::active_cell_iterator cellsIterator;
 
-	std::set<cellsIterator>* layerIterator;
+	std::vector<cellsIterator>* layerIterator;
 
 public:
 	transThermal(Triangulation<dim> & tria);
@@ -80,6 +87,12 @@ public:
 	void setup_system();
 	void assemble_system();
 	void solve_system(){};
+	void outputResults();
+};
+
+template<int dim>
+class RightHandSide : public Function<dim>{
+
 };
 
 #include "thermalSimulation_Opt.cpp"

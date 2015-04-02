@@ -17,4 +17,5 @@ int main(){
 	thermal.defaultSetup();
 	thermal.update_active_fe_indices();
 	thermal.setup_system();
+	thermal.assemble_system();
 }
