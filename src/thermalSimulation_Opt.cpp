@@ -33,35 +33,42 @@ void transThermal<dim>::defaultSetup(){
 	// Initial additive manufacturing layers
 	currentLayerCell = dof_handler.begin_active();
 	cellsIterator firstLayerCell = currentLayerCell;
-	topLayerCell = currentLayerCell->neighbor(dim-1);
 
 	std::vector<double> height;
-	height.push_back(currentLayerCell->center()[dim-1]);
+	height.push_back((double)currentLayerCell->center()[dim-1] * 10e4);
+
+
 
 	while(1){
 		nZ++;
 		if (currentLayerCell->face(dim-1)->at_boundary())
 			break;
 		currentLayerCell = currentLayerCell->neighbor(dim-1);
-		height.push_back(currentLayerCell->center()[dim-1]);
+		height.push_back((double)currentLayerCell->center()[dim-1]* 10e4);
 	}
 
 	int layerIndex = 0;
 	layerIterator =  new std::vector<cellsIterator> [nZ];
+	std::vector<double>::iterator layer;
+	int i = 0;
 	// Setting the initial fe index of cells
 	for (typename hp::DoFHandler<dim>::active_cell_iterator
 			cell = dof_handler.begin_active();
-			cell != dof_handler.end(); ++cell){
+			cell != dof_handler.end(); cell++){
 		cell->set_active_fe_index(0); // assigning zero FE for all the cells
-		auto layer = std::lower_bound(height.begin(),height.end(),cell->center()[dim-1]);
+		layer = std::lower_bound(height.begin(),height.end(),(double) cell->center()[dim-1]* 10e4);
 		layerIndex = (int)(layer - height.begin());
+		std::cout<< typeid(layer-height.begin()).name()<< std::endl;
+		std::cout<< "layer" << layerIndex;
+		std::cout<< " height"<<cell->center()[dim-1]* 10e4 << std::endl;
 		layerIterator[layerIndex].push_back(cell);
 	}
+	std::cout<<'0'<<std::endl;
 	// TODO: boundary indices
 	for (auto cell = layerIterator[0].begin();
 			cell != layerIterator[0].end(); ++cell){
-		(*cell)->face(0)->set_boundary_indicator(1);
-		assert((*cell)->face(0)->at_boundary());
+		(*cell)->face(dim-1)->set_boundary_indicator(1);
+		std::cout<<'1'<<std::endl;
 	}
 }
 
@@ -73,6 +80,9 @@ void transThermal<dim>::update_active_fe_indices(){
 			cell != layerIterator[0].end(); ++cell){
 		i++;
 		(*cell)->set_active_fe_index(0);
+		std::cout<<i<<std::endl;
+		// assigning the bnd flags
+		(*cell)->face(dim-1)->set_boundary_indicator(1);
 	}
 	std::cout<<"Initial layer cells" <<"\t"<< i << std::endl;
 }
@@ -83,18 +93,16 @@ void transThermal<dim>::setup_system(){
 	CompressedSparsityPattern compressed_sparsity_pattern(dof_handler.n_dofs());
 	DoFTools::make_sparsity_pattern (dof_handler, compressed_sparsity_pattern);
 	sparsity_pattern.copy_from (compressed_sparsity_pattern);
-
+	// matrix definitions valid for serial computations
 	mass_matrix.reinit(sparsity_pattern);
 	laplace_matrix.reinit(sparsity_pattern);
 	system_matrix.reinit (sparsity_pattern);
-	MatrixCreator::create_mass_matrix(dof_handler,
+/*	MatrixCreator::create_mass_matrix(dof_handler,
 			QGauss<dim>(activeFE.degree+1),
-			mass_matrix,
-			(const Function<dim> *)0); // function pointer allows to specify the coefficient of the matrix entry
+			mass_matrix); // function pointer allows to specify the coefficient of the matrix entry
 	MatrixCreator::create_laplace_matrix(dof_handler,
 			QGauss<dim>(activeFE.degree+1),
-			laplace_matrix,
-			(const Function<dim> *)0);
+			laplace_matrix);*/
 	solution.reinit (dof_handler.n_dofs());
 	system_rhs.reinit (dof_handler.n_dofs());
 	std::ofstream out ("sparsity_pattern.1");
@@ -114,8 +122,8 @@ void transThermal<dim>::incrementLayer(){
 
 template <int dim>
 void transThermal<dim>::assemble_system(){
-	QGauss<dim>  quadrature_formula(2); // 2 qpoints in each direction
-	FEValues<dim> fe_values (fe_collection, quadrature_formula,
+/*	QGauss<dim>  quadrature_formula(2); // 2 qpoints in each direction
+	FEValues<dim> fe_values (activeFE, quadrature_formula,
 			update_values | update_gradients | update_JxW_values); // encompassing objects of FE, Quadrature and mappings
 	const unsigned int   dofs_per_cell = activeFE.dofs_per_cell;
 	const unsigned int   n_q_points    = quadrature_formula.size();
@@ -160,11 +168,12 @@ void transThermal<dim>::assemble_system(){
 			0,
 			ConstantFunction<dim>(80),
 			boundary_values);
+
 	// Modifying the system of equations
 	MatrixTools::apply_boundary_values (boundary_values,
 			system_matrix,
 			solution,
-			system_rhs);
+			system_rhs);*/
 }
 
 template <int dim>

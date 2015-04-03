@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <typeinfo>
 
 /*template <int dim>
 void transThermal<dim>::transMesh(float time){

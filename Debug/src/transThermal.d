@@ -27,32 +27,13 @@ src/transThermal.d: ../src/transThermal.cc ../src/thermalSimulation.hpp \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/grid/tria_iterator.templates.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/distributed/tria.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/std_cxx11/tuple.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/grid/grid_generator.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/table.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/memory_consumption.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/std_cxx11/shared_ptr.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/aligned_vector.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/std_cxx11/type_traits.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/parallel.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/synchronous_iterator.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/std_cxx11/bind.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/function.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/function_time.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/tensor.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/utilities.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/mpi.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/grid/grid_tools.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/mapping.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/derivative_form.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/vector_slice.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/fe_update_flags.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/mapping_q1.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/qprojector.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/quadrature.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/dofs/dof_accessor.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/dofs/dof_handler.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/index_set.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/utilities.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/mpi.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/std_cxx11/shared_ptr.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/dofs/block_info.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/memory_consumption.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/lac/block_indices.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/logstream.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/thread_local_storage.h \
@@ -62,6 +43,25 @@ src/transThermal.d: ../src/transThermal.cc ../src/thermalSimulation.hpp \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/dofs/dof_objects.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/dofs/dof_levels.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/dofs/function_map.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/grid/grid_generator.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/table.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/aligned_vector.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/std_cxx11/type_traits.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/parallel.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/synchronous_iterator.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/std_cxx11/bind.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/function.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/function_time.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/tensor.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/grid/grid_tools.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/mapping.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/derivative_form.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/vector_slice.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/fe_update_flags.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/mapping_q1.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/qprojector.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/quadrature.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/dofs/dof_accessor.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/hp/dof_handler.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/hp/fe_collection.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/fe.h \
@@ -93,10 +93,10 @@ src/transThermal.d: ../src/transThermal.cc ../src/thermalSimulation.hpp \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/polynomial.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/fe_q_base.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/fe_poly.h \
+ /home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/fe_nothing.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/dofs/dof_tools.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/lac/sparsity_pattern.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/hp/mapping_collection.h \
- /home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/fe_nothing.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/fe_values.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/symmetric_tensor.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/multigrid/mg_dof_handler.h \
@@ -178,57 +178,19 @@ src/transThermal.d: ../src/transThermal.cc ../src/thermalSimulation.hpp \
 
 /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/std_cxx11/tuple.h:
 
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/grid/grid_generator.h:
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/dofs/dof_handler.h:
 
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/table.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/memory_consumption.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/std_cxx11/shared_ptr.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/aligned_vector.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/std_cxx11/type_traits.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/parallel.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/synchronous_iterator.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/std_cxx11/bind.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/function.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/function_time.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/tensor.h:
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/index_set.h:
 
 /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/utilities.h:
 
 /home/karthik/PhysicsModeling/deal.II/include/deal.II/base/mpi.h:
 
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/grid/grid_tools.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/mapping.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/derivative_form.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/vector_slice.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/fe_update_flags.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/mapping_q1.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/qprojector.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/quadrature.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/dofs/dof_accessor.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/dofs/dof_handler.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/index_set.h:
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/std_cxx11/shared_ptr.h:
 
 /home/karthik/PhysicsModeling/deal.II/include/deal.II/dofs/block_info.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/memory_consumption.h:
 
 /home/karthik/PhysicsModeling/deal.II/include/deal.II/lac/block_indices.h:
 
@@ -247,6 +209,44 @@ src/transThermal.d: ../src/transThermal.cc ../src/thermalSimulation.hpp \
 /home/karthik/PhysicsModeling/deal.II/include/deal.II/dofs/dof_levels.h:
 
 /home/karthik/PhysicsModeling/deal.II/include/deal.II/dofs/function_map.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/grid/grid_generator.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/table.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/aligned_vector.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/std_cxx11/type_traits.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/parallel.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/synchronous_iterator.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/std_cxx11/bind.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/function.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/function_time.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/tensor.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/grid/grid_tools.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/mapping.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/derivative_form.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/vector_slice.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/fe_update_flags.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/mapping_q1.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/qprojector.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/base/quadrature.h:
+
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/dofs/dof_accessor.h:
 
 /home/karthik/PhysicsModeling/deal.II/include/deal.II/hp/dof_handler.h:
 
@@ -310,13 +310,13 @@ src/transThermal.d: ../src/transThermal.cc ../src/thermalSimulation.hpp \
 
 /home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/fe_poly.h:
 
+/home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/fe_nothing.h:
+
 /home/karthik/PhysicsModeling/deal.II/include/deal.II/dofs/dof_tools.h:
 
 /home/karthik/PhysicsModeling/deal.II/include/deal.II/lac/sparsity_pattern.h:
 
 /home/karthik/PhysicsModeling/deal.II/include/deal.II/hp/mapping_collection.h:
-
-/home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/fe_nothing.h:
 
 /home/karthik/PhysicsModeling/deal.II/include/deal.II/fe/fe_values.h:
 
