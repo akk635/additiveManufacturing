@@ -7,7 +7,7 @@
 #include "thermalSimulation.hpp"
 
 template <int dim>
-transThermal<dim>::transThermal(Triangulation<dim> & tria):triangulation(tria), dof_handler(tria),activeFE(1){
+transThermal<dim>::transThermal(Triangulation<dim> & tria):triangulation(tria), dof_handler(tria),activeFE(1), theta(0.5){
 	fe_collection.push_back(zeroFE);
 	fe_collection.push_back(activeFE);
 }
@@ -17,7 +17,7 @@ template <int dim>
 void transThermal<dim>::readFullMesh(){
 	GridIn<dim> grid_in;
 	grid_in.attach_triangulation (triangulation);
-	std::ifstream input_file("../MeshFiles/60Structure.unv");
+	std::ifstream input_file("./MeshFiles/60Structure.unv");
 	grid_in.read_unv (input_file);
 
 	std::cout << "   Number of active cells: "
@@ -29,14 +29,13 @@ void transThermal<dim>::readFullMesh(){
 }
 
 template <int dim>
-void transThermal<dim>::defaultSetup(){
+void transThermal<dim>::assignLayerIterators(){
 	// Initial additive manufacturing layers
 	currentLayerCell = dof_handler.begin_active();
 	cellsIterator firstLayerCell = currentLayerCell;
 
 	std::vector<double> height;
 	height.push_back((double)currentLayerCell->center()[dim-1]);
-
 	while(1){
 		nZ++;
 		if (currentLayerCell->face(dim-1)->at_boundary())
@@ -44,12 +43,11 @@ void transThermal<dim>::defaultSetup(){
 		currentLayerCell = currentLayerCell->neighbor(dim-1);
 		height.push_back((double)currentLayerCell->center()[dim-1]);
 	}
+	layerIterator =  new std::vector<cellsIterator> [nZ];
 
 	int layerIndex = 0;
-	layerIterator =  new std::vector<cellsIterator> [nZ];
 	std::vector<double>::iterator layer;
-
-	//Comparison function
+	// Comparison function to compare the double values
 	compareFunction<double> compDouble((int)1e4);
 	// Setting the initial fe index of cells
 	for (typename hp::DoFHandler<dim>::active_cell_iterator
@@ -60,31 +58,35 @@ void transThermal<dim>::defaultSetup(){
 		layerIndex = (int)(layer-height.begin());
 		layerIterator[layerIndex].push_back(cell);
 	}
+}
 
-	// TODO: boundary indices
+template <int dim>
+void transThermal<dim>::defaultSetup(){
+	// Updating the active cell fe indexes of first layer
+	currentLayer = 0;
 	for (auto cell = layerIterator[0].begin();
 			cell != layerIterator[0].end(); ++cell){
-		(*cell)->face(dim-1)->set_boundary_indicator(1);
+		(*cell)->set_active_fe_index(1);
+		(*cell)->face(dim)->set_boundary_indicator(bottom_Bnd);
+		(*cell)->face(dim-1)->set_boundary_indicator(currentLayer + layer_Bnd_offset);
 	}
+	std::cout << "defaultSetup done" << std::endl;
 }
 
 template <int dim>
 void transThermal<dim>::update_active_fe_indices(){
-	int i = 0;
-	// Updating the active cell fe indexes
-	for (auto cell = layerIterator[0].begin();
-			cell != layerIterator[0].end(); ++cell){
-		i++;
+	currentLayer++;
+	if (currentLayer == nZ) return;
+	for (auto cell = layerIterator[currentLayer].begin();
+			cell != layerIterator[currentLayer].end(); ++cell){
 		(*cell)->set_active_fe_index(1);
-		// assigning the bnd flags
-		(*cell)->face(dim-1)->set_boundary_indicator(1);
+		(*cell)->face(dim-1)->set_boundary_indicator(currentLayer + layer_Bnd_offset);
 	}
-	std::cout<<"Initial layer cells" <<"\t"<< i << std::endl;
 }
 
 template <int dim>
 void transThermal<dim>::setup_system(){
-/*	dof_handler.distribute_dofs(fe_collection);
+	dof_handler.distribute_dofs(fe_collection);
 	CompressedSparsityPattern compressed_sparsity_pattern(dof_handler.n_dofs());
 	DoFTools::make_sparsity_pattern (dof_handler, compressed_sparsity_pattern);
 	sparsity_pattern.copy_from (compressed_sparsity_pattern);
@@ -92,86 +94,70 @@ void transThermal<dim>::setup_system(){
 	mass_matrix.reinit(sparsity_pattern);
 	laplace_matrix.reinit(sparsity_pattern);
 	system_matrix.reinit (sparsity_pattern);
+	// create the mass and laplace matrices
+	QGauss<dim> feQuadrature(activeFE.degree+1);
+	QGauss<dim> zeroQuadrature(1);
+	hp::QCollection<dim>  q_collection;
+	q_collection.push_back(zeroQuadrature);
+	q_collection.push_back(feQuadrature);
+
+	matrixCoefficient<dim> temp = matrixCoefficient<dim>(rho*cP);
 	MatrixCreator::create_mass_matrix(dof_handler,
-			QGauss<dim>(activeFE.degree+1),
-			mass_matrix); // function pointer allows to specify the coefficient of the matrix entry
+			q_collection,
+			mass_matrix,
+			(const Function<dim> *)&temp); // default coeff. of matrix entries
+	matrixCoefficient<dim> temp1 = matrixCoefficient<dim>(kT);
 	MatrixCreator::create_laplace_matrix(dof_handler,
-			QGauss<dim>(activeFE.degree+1),
-			laplace_matrix);
+			q_collection,
+			laplace_matrix,
+			(const Function<dim> *)&temp1); // default coeff. of matrix entries
+	copySolution.reinit(dof_handler.n_dofs());
 	solution.reinit (dof_handler.n_dofs());
+	old_solution.reinit(dof_handler.n_dofs());
 	system_rhs.reinit (dof_handler.n_dofs());
-	std::ofstream out ("sparsity_pattern.1");
-	sparsity_pattern.print_gnuplot(out);*/
+	std::cout << "Setup done" << std::endl;
 }
 
 template <int dim>
-void transThermal<dim>::incrementLayer(){
-/*	if(time == 0.0)
-		topLayerCell = dof_handler.begin_active();
+void transThermal<dim>::assemble_system(double time_step){
+	// Initializing the solution with zero function
+/*    VectorTools::interpolate(dof_handler,
+                             ZeroFunction<dim>(),
+                             old_solution);*/
+//    solution = old_solution;
 
-	if (topLayerCell->face(dim-1)->at_boundary())
-		return;
+    Vector<double> tmp;
+    tmp.reinit(dof_handler.n_dofs());
+    // \left( M + k_n \Theta A\right) U^n = M U^(n-1) - k_n (1-\Theta) A U^(n-1) + k_n \left[ (1- \Theta)F^(n-1)+ \Theta F^(n)\right]
+    // The source terms F in for this particular problem is zero
+    mass_matrix.vmult(system_rhs, old_solution);
+    laplace_matrix.vmult(tmp, old_solution);
+    system_rhs.add(-(1 - theta) * time_step, tmp);
 
-	topLayerCell = topLayerCell->neighbor(dim-1);*/
+    system_matrix.copy_from(mass_matrix);
+    system_matrix.add(theta * time_step, laplace_matrix);
 }
 
 template <int dim>
-void transThermal<dim>::assemble_system(){
-/*	QGauss<dim>  quadrature_formula(2); // 2 qpoints in each direction
-	FEValues<dim> fe_values (activeFE, quadrature_formula,
-			update_values | update_gradients | update_JxW_values); // encompassing objects of FE, Quadrature and mappings
-	const unsigned int   dofs_per_cell = activeFE.dofs_per_cell;
-	const unsigned int   n_q_points    = quadrature_formula.size();
-
-	FullMatrix<double>   cell_matrix (dofs_per_cell, dofs_per_cell);
-	Vector<double>       cell_rhs (dofs_per_cell);
-
-	std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
-
-	for(auto cell : triangulation.active_cell_iterators()){
-		fe_values.reinit(); // recomputes FE_Values on each cell
-		// resetting the local contributions
-		//TODO: to change when it can be computed parallely
-		cell_matrix = 0;
-		cell_rhs = 0;
-		// integration over the quadrature points
-		for (unsigned int q_index=0; q_index<n_q_points; ++q_index){
-			// local laplace matrix computation
-			for (unsigned int i=0; i<dofs_per_cell; ++i)
-				for (unsigned int j=0; j<dofs_per_cell; ++j)
-					cell_matrix(i,j) += (fe_values.shape_grad (i, q_index) *
-							fe_values.shape_grad (j, q_index) *
-							fe_values.JxW (q_index));
-			// local rhs computation
-			for (unsigned int i=0; i<dofs_per_cell; ++i)
-				// TODO: to include the effects of the dirichlet bnd cdns
-				cell_rhs(i) += 0;
-		}
-		// to get the corresponding global matrix indices
-		cell->get_dof_indices (local_dof_indices);
-		for (unsigned int i=0; i<dofs_per_cell; ++i)
-			for (unsigned int j=0; j<dofs_per_cell; ++j)
-				system_matrix.add (local_dof_indices[i],
-						local_dof_indices[j],
-						cell_matrix(i,j));
-		for (unsigned int i=0; i<dofs_per_cell; ++i)
-			system_rhs(local_dof_indices[i]) += cell_rhs(i);
-	}
-	// Interpolating the boundary values and proper boundary variables
-	std::map<types::global_dof_index,double> boundary_values;
-	VectorTools::interpolate_boundary_values (dof_handler,
-			0,
-			ConstantFunction<dim>(80),
-			boundary_values);
-
-	// Modifying the system of equations
-	MatrixTools::apply_boundary_values (boundary_values,
-			system_matrix,
-			solution,
-			system_rhs);*/
+void transThermal<dim>::outputResults(const std::string filename){
+    DataOut<dim,hp::DoFHandler<dim> > data_out;
+    data_out.attach_dof_handler(dof_handler);
+    std::cout << "Output DOF's" << dof_handler.n_dofs() << std::endl;
+    data_out.add_data_vector(solution, "T");
+    data_out.build_patches();
+    std::ofstream output(filename.c_str());
+    data_out.write_vtk(output);
 }
 
 template <int dim>
-void transThermal<dim>::outputResults(){
-	DataOut<dim> data_out;
+void transThermal<dim>::solve_system(){
+    SolverControl solver_control(1000, 1e-8 * system_rhs.l2_norm());
+    SolverCG<> cg(solver_control);
+    PreconditionSSOR<> preconditioner;
+    preconditioner.initialize(system_matrix, 1.0);
+    cg.solve(system_matrix, solution, system_rhs,
+             preconditioner);
+
+    std::cout << "     " << solver_control.last_step()
+              << " CG iterations." << std::endl;
 }

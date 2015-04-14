@@ -118,7 +118,8 @@ src/transThermal.d: ../src/transThermal.cc ../src/thermalSimulation.hpp \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/hp/fe_values.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/numerics/data_postprocessor.h \
  /home/karthik/PhysicsModeling/deal.II/include/deal.II/numerics/data_component_interpretation.h \
- ../src/helper.hpp ../src/thermalSimulation_Opt.cpp
+ ../src/helper.hpp ../src/thermalSimulation_Opt.cpp \
+ ../src/transientCdns.cpp
 
 ../src/thermalSimulation.hpp:
 
@@ -363,3 +364,5 @@ src/transThermal.d: ../src/transThermal.cc ../src/thermalSimulation.hpp \
 ../src/helper.hpp:
 
 ../src/thermalSimulation_Opt.cpp:
+
+../src/transientCdns.cpp:

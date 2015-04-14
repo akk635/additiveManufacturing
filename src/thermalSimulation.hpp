@@ -34,6 +34,7 @@
 #include <deal.II/numerics/matrix_tools.h>
 // for the linear algebra operations
 #include <deal.II/lac/vector.h>
+#include <deal.II/base/aligned_vector.h>
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/compressed_sparsity_pattern.h>
@@ -54,6 +55,12 @@ private:
 		zeroFE_id,
 		activeFE_id
 	};
+	// enums for boundary index
+	enum{
+		default_Bnd,
+		bottom_Bnd,
+		layer_Bnd_offset
+	};
 	Triangulation<dim> &triangulation;
 	hp::DoFHandler<dim> dof_handler; // to enumerate the DOF's in a mesh
 	hp::FECollection<dim> fe_collection; // to ensure different finite elements for different cells
@@ -68,34 +75,63 @@ private:
 	Vector<double>       solution;
 	Vector<double>       old_solution;
 	Vector<double>       system_rhs;
-	int nZ = 0; // no. of layers in Z-direction
+	Vector<double> copySolution; //copy solution before resizing
+	int currentLayer;
 
-	double time = 0.0;
+    double               time = 0.0;
+    unsigned int         timestep_number;
+    // For the time stepping scheme
+    const double         theta;
+    const double heatingTime = 0.6;
+    double coolingTime = 0.6;
+
+    // Material parameters in SI units
+    // TODO: shd consider the non-linear parameters
+    int rho = 8390;
+    int cP = 370;
+    int kT = 6;
 	// Helper functions for layer wise increment
-	typename hp::DoFHandler<dim>::active_cell_iterator topLayerCell;
 	typename hp::DoFHandler<dim>::active_cell_iterator currentLayerCell;
 	typedef typename hp::DoFHandler<dim>::active_cell_iterator cellsIterator;
-
 	std::vector<cellsIterator>* layerIterator;
 
 public:
 	transThermal(Triangulation<dim> & tria);
 	~transThermal(){};
+	int nZ = 0; // total no. of layers in Z-direction
 	void readFullMesh();
+	void assignLayerIterators();
 	void defaultSetup(); // Setting the cell active fe index and also initialize the top and current layers
 	void update_active_fe_indices();
-	void incrementLayer();
 	void setup_system();
-	void assemble_system();
-	void solve_system(){};
-	void outputResults();
+	void assemble_system(double time_step);
+	void heatingBndCdn();
+	void coolingBndCdn();
+	void solve_system();
+	void outputResults(const std::string filename);
+	// Running steps
+	void pretimeStepping(); // during the actual laser heating for 600 ms
+	void postCoolingStep(); // Cooling for 14 secs after the laser heating
 };
 
-template<int dim>
-class RightHandSide : public Function<dim>{
 
+
+template<unsigned int dim, typename T=double>
+class matrixCoefficient : public Function<dim,T>
+{
+private:
+	 T coefficient;
+public:
+	 matrixCoefficient(T argValue):Function<dim, T>(){coefficient = argValue;}
+	 ~matrixCoefficient(){}
+  virtual T value (const Point<dim>  &p,
+                        const unsigned int component = 0) const{
+	  Assert(component == 0, ExcInternalError());
+	  return coefficient;
+  }
 };
 
 #include "thermalSimulation_Opt.cpp"
+#include "transientCdns.cpp"
 
 #endif /* THERMALSIMULATION_HPP_ */
