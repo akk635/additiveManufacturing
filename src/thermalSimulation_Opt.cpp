@@ -13,6 +13,7 @@ transThermal<dim>::transThermal(Triangulation<dim> & tria):triangulation(tria), 
 }
 
 // To read the external mesh from salome platform
+// read the deal.II documentation to know more about the GridIn class
 template <int dim>
 void transThermal<dim>::readFullMesh(){
 	GridIn<dim> grid_in;
@@ -35,7 +36,7 @@ void transThermal<dim>::assignLayerIterators(){
 	cellsIterator firstLayerCell = currentLayerCell;
 
 	std::vector<double> height;
-	height.push_back((double)currentLayerCell->center()[dim-1]);
+	height.push_back((double)currentLayerCell->center()[dim-1]); // In this case (dim-1) specifies Z-direction
 	while(1){
 		nZ++;
 		if (currentLayerCell->face(dim-1)->at_boundary())
@@ -64,12 +65,17 @@ template <int dim>
 void transThermal<dim>::defaultSetup(){
 	// Updating the active cell fe indexes of first layer
 	currentLayer = 0;
-	for (auto cell = layerIterator[0].begin();
-			cell != layerIterator[0].end(); ++cell){
-		(*cell)->set_active_fe_index(1);
-		(*cell)->face(dim)->set_boundary_indicator(bottom_Bnd);
-		(*cell)->face(dim-1)->set_boundary_indicator(currentLayer + layer_Bnd_offset);
+	for (auto cell = layerIterator[currentLayer].begin();
+			cell != layerIterator[currentLayer].end(); ++cell){
+		(*cell)->set_active_fe_index(1); // 2 times de-referencing of the cell because the iterator is one hop away from the data
+		(*cell)->face(dim)->set_boundary_indicator(bottom_Bnd); // face(int face_Index) follow a specific numbering pattern
 	}
+/*	currentLayer++;
+	for (auto cell = layerIterator[currentLayer].begin();
+			cell != layerIterator[currentLayer].end(); ++cell){
+		(*cell)->set_active_fe_index(1); // 2 times de-referencing of the cell because the iterator is one hop away from the data
+		(*cell)->face(dim-1)->set_boundary_indicator(currentLayer + layer_Bnd_offset);
+	}*/
 	std::cout << "defaultSetup done" << std::endl;
 }
 
@@ -86,11 +92,23 @@ void transThermal<dim>::update_active_fe_indices(){
 
 template <int dim>
 void transThermal<dim>::setup_system(){
+	setup_DOFs();
+	setup_matrix();
+	setup_solution();
+	system_rhs.reinit (dof_handler.n_dofs());
+	std::cout << "Setup done" << std::endl;
+}
+
+template <int dim>
+void transThermal<dim>::setup_DOFs(){
 	dof_handler.distribute_dofs(fe_collection);
 	CompressedSparsityPattern compressed_sparsity_pattern(dof_handler.n_dofs());
 	DoFTools::make_sparsity_pattern (dof_handler, compressed_sparsity_pattern);
 	sparsity_pattern.copy_from (compressed_sparsity_pattern);
-	// matrix definitions valid for serial computations
+}
+
+template <int dim>
+void transThermal<dim>::setup_matrix(){
 	mass_matrix.reinit(sparsity_pattern);
 	laplace_matrix.reinit(sparsity_pattern);
 	system_matrix.reinit (sparsity_pattern);
@@ -105,59 +123,89 @@ void transThermal<dim>::setup_system(){
 	MatrixCreator::create_mass_matrix(dof_handler,
 			q_collection,
 			mass_matrix,
-			(const Function<dim> *)&temp); // default coeff. of matrix entries
+			(const Function<dim> *)& temp); // default coeff. of matrix entries
 	matrixCoefficient<dim> temp1 = matrixCoefficient<dim>(kT);
 	MatrixCreator::create_laplace_matrix(dof_handler,
 			q_collection,
 			laplace_matrix,
-			(const Function<dim> *)&temp1); // default coeff. of matrix entries
-	copySolution.reinit(dof_handler.n_dofs());
-	solution.reinit (dof_handler.n_dofs());
+			(const Function<dim> *)& temp1);
+}
+
+template <int dim>
+void transThermal<dim>::setup_solution(){
+	// Based upon the sparsity pattern may be needed to be implemented
+	solution.reinit(dof_handler.n_dofs());
+	std::cout << "# DOF's" << dof_handler.n_dofs() << std::endl;
+	// Reinitializing the previous solutions
+	int cellIndex;
+	if (old_solution.size() > 0){
+		std::cout << "CurrentLayer" << currentLayer << std::endl;
+		for (int i = 0; i < currentLayer; i++){
+			int j = 0;
+			for (auto cell = layerIterator[i].begin();
+					cell != layerIterator[i].end(); ++cell){
+				cellIndex = i * layerIterator[i].size() + j++;
+				std::vector<types::global_dof_index> tempDOF((*cell)->get_fe().n_dofs_per_cell());
+				(*cell)->get_dof_indices(tempDOF);
+				assert(checkItrOrder[cellIndex] == (*cell)->center()[0]);
+				for (int dof = 0; dof < tempDOF.size(); dof++){
+					assert(tempDOF[dof] < dof_handler.n_dofs());
+					solution[tempDOF[dof]] = old_solution[prev_DOFs[cellIndex][dof]]; // Assuming same cell traversal for iterators
+				}
+			}
+		}
+	}
 	old_solution.reinit(dof_handler.n_dofs());
-	system_rhs.reinit (dof_handler.n_dofs());
-	std::cout << "Setup done" << std::endl;
+	old_solution = solution;
+}
+
+template <int dim>
+void transThermal<dim>::store_PrevDOFs(){
+	// old_solution has been properly set
+	for (int i = 0; i <= currentLayer; i++){
+		for (auto cell = layerIterator[i].begin();
+				cell != layerIterator[i].end(); ++cell){
+			std::vector<types::global_dof_index> tempDOF((*cell)->get_fe().n_dofs_per_cell());
+			(*cell)->get_dof_indices(tempDOF);
+			prev_DOFs.push_back(tempDOF);
+			checkItrOrder.push_back((*cell)->center()[0]);
+		}
+	}
 }
 
 template <int dim>
 void transThermal<dim>::assemble_system(double time_step){
-	// Initializing the solution with zero function
-/*    VectorTools::interpolate(dof_handler,
-                             ZeroFunction<dim>(),
-                             old_solution);*/
-//    solution = old_solution;
+	Vector<double> tmp;
+	tmp.reinit(dof_handler.n_dofs());
+	// \left( M + k_n \Theta A\right) U^n = M U^(n-1) - k_n (1-\Theta) A U^(n-1) + k_n \left[ (1- \Theta)F^(n-1)+ \Theta F^(n)\right]
+	// The source terms F in for this particular problem is zero
+	mass_matrix.vmult(system_rhs, old_solution);
+	laplace_matrix.vmult(tmp, old_solution);
+	system_rhs.add(-(1 - theta) * time_step, tmp);
 
-    Vector<double> tmp;
-    tmp.reinit(dof_handler.n_dofs());
-    // \left( M + k_n \Theta A\right) U^n = M U^(n-1) - k_n (1-\Theta) A U^(n-1) + k_n \left[ (1- \Theta)F^(n-1)+ \Theta F^(n)\right]
-    // The source terms F in for this particular problem is zero
-    mass_matrix.vmult(system_rhs, old_solution);
-    laplace_matrix.vmult(tmp, old_solution);
-    system_rhs.add(-(1 - theta) * time_step, tmp);
-
-    system_matrix.copy_from(mass_matrix);
-    system_matrix.add(theta * time_step, laplace_matrix);
+	system_matrix.copy_from(mass_matrix);
+	system_matrix.add(theta * time_step, laplace_matrix);
 }
 
 template <int dim>
 void transThermal<dim>::outputResults(const std::string filename){
-    DataOut<dim,hp::DoFHandler<dim> > data_out;
-    data_out.attach_dof_handler(dof_handler);
-    std::cout << "Output DOF's" << dof_handler.n_dofs() << std::endl;
-    data_out.add_data_vector(solution, "T");
-    data_out.build_patches();
-    std::ofstream output(filename.c_str());
-    data_out.write_vtk(output);
+	DataOut<dim,hp::DoFHandler<dim> > data_out;
+	data_out.attach_dof_handler(dof_handler);
+	data_out.add_data_vector(solution, "T");
+	data_out.build_patches();
+	std::ofstream output(filename.c_str());
+	data_out.write_vtk(output);
 }
 
 template <int dim>
 void transThermal<dim>::solve_system(){
-    SolverControl solver_control(1000, 1e-8 * system_rhs.l2_norm());
-    SolverCG<> cg(solver_control);
-    PreconditionSSOR<> preconditioner;
-    preconditioner.initialize(system_matrix, 1.0);
-    cg.solve(system_matrix, solution, system_rhs,
-             preconditioner);
+	SolverControl solver_control(1000, 1e-8 * system_rhs.l2_norm());
+	SolverCG<> cg(solver_control);
+	PreconditionSSOR<> preconditioner;
+	preconditioner.initialize(system_matrix, 1.0);
+	cg.solve(system_matrix, solution, system_rhs,
+			preconditioner);
 
-    std::cout << "     " << solver_control.last_step()
-              << " CG iterations." << std::endl;
+	/*std::cout << "     " << solver_control.last_step()
+            								  << " CG iterations." << std::endl;*/
 }

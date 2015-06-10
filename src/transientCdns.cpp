@@ -10,7 +10,6 @@ template <int dim>
 void transThermal<dim>::heatingBndCdn(){
 /*Dirichlet boundary cdn T = 80 at bottom surface
 	and T = 1255 at top layer*/
-
 	// Interpolating the boundary values
 	std::map<types::global_dof_index,double> boundary_values;
 	VectorTools::interpolate_boundary_values (dof_handler,
@@ -21,6 +20,7 @@ void transThermal<dim>::heatingBndCdn(){
 			currentLayer+layer_Bnd_offset,
 			ConstantFunction<dim>(1255),
 			boundary_values);
+
 	// Modifying the system of equations
 	MatrixTools::apply_boundary_values (boundary_values,
 			system_matrix,
@@ -45,7 +45,7 @@ void transThermal<dim>::coolingBndCdn(){
 	q_collection.push_back(zeroQuadrature);
 	q_collection.push_back(feQuadrature);
 	int layers[] = {bottom_Bnd,currentLayer+layer_Bnd_offset};
-	// Neumann boundary condition on the rhs for both the top and bottom layers
+	// Neumann boundary condition on the rhs for both the top and bottom layers need to implement a function for now a zeroFunction has been considered
 	VectorTools::create_boundary_right_hand_side (dof_handler,
 	                                              q_collection,
 	                                              ZeroFunction<dim>(),
@@ -63,19 +63,24 @@ template <int dim>
 void transThermal<dim>::pretimeStepping(){
 	assemble_system(heatingTime);
 	heatingBndCdn();
-	solve_system();
+	if (solveTag)
+		solve_system();
+	std::cout << "Solution vector size" << solution.size()<<std::endl;
 	time += heatingTime;
 	old_solution = solution;
+	store_PrevDOFs();
 }
 
 template <int dim>
 void transThermal<dim>::postCoolingStep(){
 	// TODO: Need to create adaptive time-stepping scheme later
-	assemble_system(coolingTime);
-	coolingBndCdn();
+	setup_matrix();
 	for(double localTime = 0.0; localTime < 14.0; localTime+=coolingTime){
+		assemble_system(coolingTime);
+		coolingBndCdn();
 		solve_system();
 		time += coolingTime;
 		old_solution = solution;
 	}
+	store_PrevDOFs();
 }

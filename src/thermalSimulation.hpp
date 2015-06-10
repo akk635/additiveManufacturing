@@ -75,8 +75,7 @@ private:
 	Vector<double>       solution;
 	Vector<double>       old_solution;
 	Vector<double>       system_rhs;
-	Vector<double> copySolution; //copy solution before resizing
-	int currentLayer;
+	int currentLayer; // Numbering started from zero
 
     double               time = 0.0;
     unsigned int         timestep_number;
@@ -94,16 +93,23 @@ private:
 	typename hp::DoFHandler<dim>::active_cell_iterator currentLayerCell;
 	typedef typename hp::DoFHandler<dim>::active_cell_iterator cellsIterator;
 	std::vector<cellsIterator>* layerIterator;
+	std::vector<std::vector<types::global_dof_index> > prev_DOFs; // To store the DOF indices of the previous solution
+	std::vector<double> checkItrOrder;
 
 public:
 	transThermal(Triangulation<dim> & tria);
 	~transThermal(){};
 	int nZ = 0; // total no. of layers in Z-direction
+    bool solveTag = true;
 	void readFullMesh();
 	void assignLayerIterators();
 	void defaultSetup(); // Setting the cell active fe index and also initialize the top and current layers
 	void update_active_fe_indices();
 	void setup_system();
+	void setup_DOFs();
+	void setup_matrix(); // to accommodate the change in the boundary conditions during the heating and cooling conditions
+	void setup_solution(); // If it is not a symmetric sparsity pattern then it needs to be implemented
+	void store_PrevDOFs();
 	void assemble_system(double time_step);
 	void heatingBndCdn();
 	void coolingBndCdn();
